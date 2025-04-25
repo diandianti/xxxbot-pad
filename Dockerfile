@@ -7,6 +7,13 @@ WORKDIR /app
 ENV TZ=Asia/Shanghai
 ENV IMAGEIO_FFMPEG_EXE=/usr/bin/ffmpeg
 
+# 使用国内镜像
+RUN if [ -f /etc/apt/sources.list ]; then \
+    sed -i 's/deb.debian.org/mirrors.ustc.edu.cn/g' /etc/apt/sources.list; \
+else \
+    sed -i 's/deb.debian.org/mirrors.ustc.edu.cn/g' /etc/apt/sources.list.d/debian.sources; \
+fi
+
 # 更新软件源
 RUN apt-get update
 
