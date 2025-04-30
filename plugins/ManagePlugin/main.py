@@ -28,15 +28,19 @@ class ManagePlugin(PluginBase):
         plugin_config = plugin_config["ManagePlugin"]
         main_config = main_config["XYBot"]
 
-        self.command = plugin_config["command"]
+        self.commands = plugin_config["commands"]
         self.admins = main_config["admins"]
+
 
     @on_text_message
     async def handle_text(self, bot: WechatAPIClient, message: dict):
         content = str(message["Content"]).strip()
         command = content.split(" ")
 
-        if not len(command) or command[0] not in self.command:
+        def safe_get_cmd(k: str) -> str:
+            return self.commands.get(k, "")
+
+        if not len(command) or command[0] not in self.commands.values():
             return True  # 不是管理命令，继续执行后续处理
 
         if message["SenderWxid"] not in self.admins:
@@ -44,7 +48,7 @@ class ManagePlugin(PluginBase):
             return False  # 阻止后续处理
 
         plugin_name = command[1] if len(command) > 1 else None
-        if command[0] == "加载插件":
+        if command[0] == safe_get_cmd("load"): #"加载插件":
             if plugin_name in plugin_manager.plugins.keys():
                 await bot.send_text_message(message["FromWxid"], "⚠️插件已经加载")
                 return False  # 阻止后续处理
@@ -55,7 +59,7 @@ class ManagePlugin(PluginBase):
             else:
                 await bot.send_text_message(message["FromWxid"], f"❌插件 {plugin_name} 加载失败，请查看日志错误信息")
 
-        elif command[0] == "加载所有插件":
+        elif command[0] == safe_get_cmd("load_all"):#"加载所有插件":
             attempt = await plugin_manager.load_plugins_from_directory(bot)
             if isinstance(attempt, list):
                 attempt = '\n'.join(attempt)
@@ -63,7 +67,7 @@ class ManagePlugin(PluginBase):
             else:
                 await bot.send_text_message(message["FromWxid"], "❌插件加载失败，请查看日志错误信息")
 
-        elif command[0] == "卸载插件":
+        elif command[0] == safe_get_cmd("unload"): #"卸载插件":
             if plugin_name == "ManagePlugin":
                 await bot.send_text_message(message["FromWxid"], "⚠️你不能卸载 ManagePlugin 插件！")
                 return False  # 阻止后续处理
@@ -79,14 +83,14 @@ class ManagePlugin(PluginBase):
             else:
                 await bot.send_text_message(message["FromWxid"], f"❌插件 {plugin_name} 卸载失败，请查看日志错误信息")
 
-        elif command[0] == "卸载所有插件":
+        elif command[0] == safe_get_cmd("unload_all") :#"卸载所有插件":
             unloaded_plugins, failed_unloads = await plugin_manager.unload_all_plugins()
             unloaded_plugins = '\n'.join(unloaded_plugins)
             failed_unloads = '\n'.join(failed_unloads)
             await bot.send_text_message(message["FromWxid"],
                                         f"✅插件卸载成功：\n{unloaded_plugins}\n❌插件卸载失败：\n{failed_unloads}")
 
-        elif command[0] == "重载插件":
+        elif command[0] == safe_get_cmd("reload"): #"重载插件":
             if plugin_name == "ManagePlugin":
                 await bot.send_text_message(message["FromWxid"], "⚠️你不能重载 ManagePlugin 插件！")
                 return False  # 阻止后续处理
@@ -100,14 +104,14 @@ class ManagePlugin(PluginBase):
             else:
                 await bot.send_text_message(message["FromWxid"], f"❌插件 {plugin_name} 重载失败，请查看日志错误信息")
 
-        elif command[0] == "重载所有插件":
+        elif command[0] == safe_get_cmd("reload_all"): #"重载所有插件":
             attempt = await plugin_manager.reload_all_plugins(bot)
             if attempt:
                 await bot.send_text_message(message["FromWxid"], "✅所有插件重载成功")
             else:
                 await bot.send_text_message(message["FromWxid"], "❌插件重载失败，请查看日志错误信息")
 
-        elif command[0] == "插件列表":
+        elif command[0] == safe_get_cmd("list"): #"插件列表":
             plugin_list = plugin_manager.get_plugin_info()
 
             plugin_stat = [["插件名称", "是否启用"]]
@@ -118,7 +122,7 @@ class ManagePlugin(PluginBase):
 
             await bot.send_text_message(message["FromWxid"], table)
 
-        elif command[0] == "插件信息":
+        elif command[0] == safe_get_cmd("info"): #"插件信息":
             attemt = plugin_manager.get_plugin_info(plugin_name)
             if isinstance(attemt, dict):
                 output = (f"插件名称: {attemt['name']}\n"

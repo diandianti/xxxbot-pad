@@ -1,2 +1,9 @@
-[ManagePlugin]
-command = ["加载插件", "加载所有插件", "卸载插件", "卸载所有插件", "重载插件", "重载所有插件", "插件列表", "插件信息"]
+[ManagePlugin.commands]
+load = "加载插件"
+load_all = "加载所有插件"
+unload = "卸载插件"
+unload_all = "卸载所有插件"
+reload = "重载插件"
+reload_all = "重载所有插件"
+list = "插件列表"
+info = "插件信息"
